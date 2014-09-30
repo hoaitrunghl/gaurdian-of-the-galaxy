@@ -132,6 +132,9 @@ private TextureRegion mTextureRegionMeteors;
   final Sprite SpritePlanets =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets);
   scene.attachChild(SpritePlanets);
   SpritePlanets.setScale(1);
+  //Move sprite Planets
+  MoveXModifier modifier = new MoveXModifier(80, (float) (CAMERA_WIDTH), 0-SpritePlanets.getX());
+  SpritePlanets.registerEntityModifier(modifier);
   //SpritePlanets.setPosition(pX, pY)
   /// Meteors
   final Sprite SpriteMeteors =  new Sprite((float) (CAMERA_WIDTH/1.5), CAMERA_HEIGHT/8, mTextureRegionMeteors);
