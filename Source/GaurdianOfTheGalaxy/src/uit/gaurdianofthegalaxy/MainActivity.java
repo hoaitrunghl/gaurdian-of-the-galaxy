@@ -24,11 +24,13 @@ import org.anddev.andengine.entity.Entity;
 import org.anddev.andengine.entity.modifier.MoveXModifier;
 import org.anddev.andengine.entity.modifier.MoveYModifier;
 import org.anddev.andengine.entity.scene.Scene;
+import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
 import org.anddev.andengine.entity.scene.background.AutoParallaxBackground;
 import org.anddev.andengine.entity.scene.background.ParallaxBackground.ParallaxEntity;
 import org.anddev.andengine.entity.sprite.AnimatedSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.util.FPSLogger;
+import org.anddev.andengine.input.touch.TouchEvent;
 import org.anddev.andengine.opengl.texture.Texture;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
@@ -40,7 +42,8 @@ import android.os.Debug;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
-public class MainActivity extends BaseGameActivity {
+public class MainActivity extends BaseGameActivity implements
+IOnSceneTouchListener {
 
  
  private static  int CAMERA_WIDTH ;
@@ -55,6 +58,7 @@ public class MainActivity extends BaseGameActivity {
  //Khai báo biến sprite animate
  private Texture mTextureAirplanet;
  private TiledTextureRegion mTextureRegionAirplanet;
+ private AnimatedSprite Player;
  //Khai báo biến sprite
  private Texture mTexturePlanets; // ctrl +spage để import thư viên :d
  private TextureRegion mTextureRegionPlanets;
@@ -63,6 +67,7 @@ public class MainActivity extends BaseGameActivity {
  //Khai báo biến Meteors.
  private Texture mTextureMeteors;
  private TextureRegion mTextureRegionMeteors;
+ private Sprite SpriteMeteors;
  private LinkedList<Sprite> targetLLMeteors;
  private LinkedList<Sprite> TargetsToBeAddedMeteors;
  // Khai báo biến va chạm
@@ -73,7 +78,8 @@ public class MainActivity extends BaseGameActivity {
  //Khao báo biến music
  private Music backgroundMusic;
  private Sound Boom;
-
+ QuyDaoBay quydaobay=new QuyDaoBay();
+ int ty;
  
  @Override
  public Engine onLoadEngine() {
@@ -105,7 +111,7 @@ public class MainActivity extends BaseGameActivity {
    //=====================================  Load sprite animate ===================================================//
   	TextureRegionFactory.setAssetBasePath("gfx/");
   	this.mTextureAirplanet = new Texture(128, 128, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
-    this.mTextureRegionAirplanet = TextureRegionFactory.createTiledFromAsset(this.mTextureAirplanet, this, "animatesprite.png",0, 0, 1, 1);
+    this.mTextureRegionAirplanet = TextureRegionFactory.createTiledFromAsset(this.mTextureAirplanet, this, "animatesprite2.png",0, 0, 1, 1);
     this.mEngine.getTextureManager().loadTexture(this.mTextureAirplanet);
    
     //====================================== Load sprite Planets ==================================================//
@@ -156,25 +162,22 @@ public class MainActivity extends BaseGameActivity {
   final Scene scene = new Scene();
   
   final AutoParallaxBackground autoParallaxBackground = new AutoParallaxBackground(0, 0, 0, 5);
-  autoParallaxBackground.attachParallaxEntity(new ParallaxEntity(-10.0f, new Sprite(0, CAMERA_HEIGHT - 
+  autoParallaxBackground.attachParallaxEntity(new ParallaxEntity(-50.0f, new Sprite(0, CAMERA_HEIGHT - 
     this.mParallaxLayerBack.getHeight()
     , this.mParallaxLayerBack)));
   scene.setBackground(autoParallaxBackground);
   //========================================*Load sprite animate*========================================//
     
-  /*final AnimatedSprite animatedSprite =  new AnimatedSprite(0, CAMERA_HEIGHT/2, mTextureRegionAirplanet);
-  scene.attachChild(animatedSprite);
-  animatedSprite.setScale(1);//tăng kích thước sprite x lần
-  //animatedSprite.animate(new long[] { 200, 200, 200 },0,2, true);*/
   //Vị trí khởi tạo AnimatedSprite
-  final int centerX = 0;
-  final int centerY = (CAMERA_HEIGHT - this.mTextureRegionAirplanet.getHeight()) / 2;
+  final int PlayerX = 0;
+  final int PlayerY = (CAMERA_HEIGHT - this.mTextureRegionAirplanet.getHeight()) / 2;
   //Tạo đối tượng AnimatedSprite
-  final AnimatedSprite face = new AnimatedSprite(centerX, centerY, this.mTextureRegionAirplanet);
+  Player = new AnimatedSprite(PlayerX, PlayerY, this.mTextureRegionAirplanet);
 
-  final PhysicsHandler physicsHandler = new PhysicsHandler(face);
-  face.registerUpdateHandler(physicsHandler);
-  scene.attachChild(face);
+  final PhysicsHandler physicsHandler = new PhysicsHandler(Player);
+  Player.registerUpdateHandler(physicsHandler);
+  scene.attachChild(Player);
+  Player.setScale((float) 0.7);
   
   //========================================*Load sprite Planets*=========================================//
   final Sprite SpritePlanets =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets);
@@ -189,14 +192,19 @@ public class MainActivity extends BaseGameActivity {
   //======================================= Load Va chạm =================================================
   Vacham = new AnimatedSprite((float) (-CAMERA_WIDTH), 100, this.mTiledTextureRegionVacham);
 	scene.attachChild(Vacham);
-	Vacham.setScale(2f);
+	Vacham.setScale((float) 2f);
 	Vacham.setRotation(0);
 	Vacham.animate(new long[] { 200, 200, 200,200},0, 3, true);
 	Vacham.setVisible(false);
   //=================================== * Meteors and move * ===========================================================//
-	//final Sprite SpriteMeteors =  new Sprite(-CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionMeteors);
-	//scene.attachChild(SpriteMeteors);
-	//SpriteMeteors.setScale((float) (0.2));
+	SpriteMeteors =  new Sprite((float) (-CAMERA_WIDTH), CAMERA_HEIGHT/2, mTextureRegionMeteors);
+	scene.attachChild(SpriteMeteors);
+	SpriteMeteors.setScale((float) (0.2));
+	
+	//quydaobay.setXY(SpriteMeteors.getX(), SpriteMeteors.getY());
+	//quydaobay.moveDirection(0);
+	//quydaobay.getX();
+	//quydaobay.getY();
 	targetLLMeteors = new LinkedList();
 	TargetsToBeAddedMeteors = new LinkedList();
 	IUpdateHandler detect = new IUpdateHandler() {
@@ -204,55 +212,52 @@ public class MainActivity extends BaseGameActivity {
 	    public void reset() {
 	    	
 	    }
-	    //int dem=0;
 	    public void onUpdate(float pSecondsElapsed) { 
 	    	try {
-	    		
-				Random rand = new Random();
+	    		if ((SpriteMeteors.getX()<-50))
+	    		{
+	    		Random rand = new Random();
 			  int minY = 5;
 			  int maxY = CAMERA_HEIGHT- mTextureRegionMeteors.getWidth();
 			  int rangeY = maxY - minY;
-			  int y = rand.nextInt(rangeY) + minY;
+			  ty = rand.nextInt(rangeY) + minY;
 			  double x = CAMERA_WIDTH;
-			  
-			  final Sprite SpriteMeteors = new Sprite((float) x, y, mTextureRegionMeteors);
-			 // if (dem <5){
-			  scene.attachChild(SpriteMeteors);
-			  SpriteMeteors.setScale((float) (0.2));//}
-	 
-			  int minDuration = 3;// tốc độ vật bay chậm nhất
-			  int maxDuration = 5;// tốc độ vật bay nhanh nhất
-			  int rangeDuration = maxDuration - minDuration;
-			  int actualDuration = rand.nextInt(rangeDuration) + minDuration;
-			  MoveXModifier mod = new MoveXModifier(actualDuration, SpriteMeteors.getX(), 0-SpriteMeteors.getX());
-			  Thread.sleep(0);
-	        Iterator<Sprite> targets = targetLLMeteors.iterator();
-	        Sprite _target;
-	 
-	        while (targets.hasNext()) {
-	            _target = targets.next();
-	           // dem++;
-	          if (_target.collidesWith(face)) {
+			  SpriteMeteors.setPosition(CAMERA_WIDTH, ty);
+			  quydaobay.setXY(ty,0);
+			  }
+	    		
+	    		////Cập nhật tọa độ x---;
+	    		SpriteMeteors.setPosition(SpriteMeteors.getX()-20,quydaobay.getY());
+	    		
+	    		Player.setPosition(Player.getX(),Player.getY()+20);
+	    		Thread.sleep(50);
+	    			       
+	          if (SpriteMeteors.collidesWith(Player)) {
 	        	  	Vacham.setVisible(true);
-			  		Vacham.setPosition(face.getX(), face.getY());
+			  		Vacham.setPosition(Player.getX(), Player.getY());
 			  		//removeSprite(_target, targets);
-			  		scene.detachChild(face);
+			  		scene.detachChild(Player);
 			  		Boom.play();
-			  		Vacham.setVisible(false);
+//			  		return ;
+			  		finish();// Kết thúc ứng dụng.
             }
- 
-	        }
-	        SpriteMeteors.registerEntityModifier(mod);
+	        quydaobay.setXY(SpriteMeteors.getX(),0);	
+			quydaobay.moveDirection(0);
+	    	//}
+	       // SpriteMeteors.registerEntityModifier(mod);
 	        TargetsToBeAddedMeteors.add(SpriteMeteors);	
 	        targetLLMeteors.addAll(TargetsToBeAddedMeteors);
-	       // TargetsToBeAddedMeteors.clear();
+	      
 	   } 
 		   catch (InterruptedException e) {
 			//TODO Auto-generated catch block
 			e.printStackTrace();
 		}}
+	  
 	    };
+	    
 	    	scene.registerUpdateHandler(detect);
+	    	scene.setOnSceneTouchListener(this);
   
   //==============================================*Load music*================================================//
   //this.backgroundMusic.play(); 
@@ -273,5 +278,24 @@ public class MainActivity extends BaseGameActivity {
  public void onLoadComplete() {
    
  }
+
+@Override
+public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
+	// TODO Auto-generated method stub
+	if (pSceneTouchEvent.getAction() == TouchEvent.ACTION_DOWN) {
+		final float touchX = Player.getX();
+		final float touchY = 150;
+		
+        touchProjectile(touchX,touchY);
+        return true;
+    }
+	return false;
+}
+
+private void touchProjectile(final float pX, final float pY) {
+	// TODO Auto-generated method stub
+	Player.setPosition(Player.getX(), Player.getY()-pY);
+	
+}
  
 }
