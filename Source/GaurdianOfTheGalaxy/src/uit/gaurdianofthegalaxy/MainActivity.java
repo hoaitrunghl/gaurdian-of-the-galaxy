@@ -60,10 +60,16 @@ IOnSceneTouchListener {
  private TiledTextureRegion mTextureRegionAirplanet;
  private AnimatedSprite Player;
  //Khai báo biến sprite
- private Texture mTexturePlanets; // ctrl +spage để import thư viên :d
+ private Texture mTexturePlanets; 
  private TextureRegion mTextureRegionPlanets;
- private LinkedList<AnimatedSprite> LLPlanets;
- private LinkedList<AnimatedSprite> LLToBeAddedPlanets;
+ private Texture mTexturePlanets2; 
+ private TextureRegion mTextureRegionPlanets2;
+ private Texture mTexturePlanets3; 
+ private TextureRegion mTextureRegionPlanets3;
+ private Texture mTexturePlanets4; 
+ private TextureRegion mTextureRegionPlanets4;
+ private Texture mTexturePlanets5; 
+ private TextureRegion mTextureRegionPlanets5;
  //Khai báo biến Meteors.
  private Texture mTextureMeteors;
  private TextureRegion mTextureRegionMeteors;
@@ -79,8 +85,13 @@ IOnSceneTouchListener {
  private Music backgroundMusic;
  private Sound Boom;
  QuyDaoBay quydaobay=new QuyDaoBay();
- int ty;
- 
+ float ty, py;
+ int d;
+ Boolean check1=false;
+ Boolean check2=false;
+ Boolean check3=false;
+ Boolean check4=false;
+ Boolean check5=false;
  @Override
  public Engine onLoadEngine() {
 	 //load thông số màn hình của thiết bị
@@ -119,6 +130,21 @@ IOnSceneTouchListener {
     mTextureRegionPlanets = TextureRegionFactory.createFromAsset(this.mTexturePlanets, this, "planets1.png", 0, 0);
     this.mEngine.getTextureManager().loadTexture(this.mTexturePlanets);
     
+    this.mTexturePlanets2 = new Texture(256, 256,TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+    mTextureRegionPlanets2 = TextureRegionFactory.createFromAsset(this.mTexturePlanets2, this, "1.png", 0, 0);
+    this.mEngine.getTextureManager().loadTexture(this.mTexturePlanets2);
+    
+    this.mTexturePlanets3 = new Texture(256, 256,TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+    mTextureRegionPlanets3 = TextureRegionFactory.createFromAsset(this.mTexturePlanets3, this, "11.png", 0, 0);
+    this.mEngine.getTextureManager().loadTexture(this.mTexturePlanets3);
+    
+    this.mTexturePlanets4 = new Texture(256, 256,TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+    mTextureRegionPlanets4 = TextureRegionFactory.createFromAsset(this.mTexturePlanets4, this, "2.png", 0, 0);
+    this.mEngine.getTextureManager().loadTexture(this.mTexturePlanets4);
+    
+    this.mTexturePlanets5 = new Texture(256, 256,TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+    mTextureRegionPlanets5 = TextureRegionFactory.createFromAsset(this.mTexturePlanets5, this, "5.png", 0, 0);
+    this.mEngine.getTextureManager().loadTexture(this.mTexturePlanets5);
     //====================================== Load Meteors ========================================================//
     this.mTextureMeteors = new Texture(512, 512,TextureOptions.BILINEAR_PREMULTIPLYALPHA);
     mTextureRegionMeteors = TextureRegionFactory.createFromAsset(this.mTextureMeteors, this, "meteors1.png", 0, 0);
@@ -183,12 +209,22 @@ IOnSceneTouchListener {
   final Sprite SpritePlanets =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets);
   scene.attachChild(SpritePlanets);
   SpritePlanets.setScale(1);
-  //Move sprite Planets
-  MoveXModifier modifierPlanets = new MoveXModifier(80, (float) (CAMERA_WIDTH/2), 0-SpritePlanets.getX());
-  SpritePlanets.registerEntityModifier(modifierPlanets);
   
+ final Sprite SpritePlanets2 =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets2);
+  scene.attachChild(SpritePlanets2);
+  SpritePlanets2.setScale((float) 0.75);
   
+  final Sprite SpritePlanets3 =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets3);
+  scene.attachChild(SpritePlanets3);
+  SpritePlanets3.setScale(1);
   
+  final Sprite SpritePlanets4 =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets4);
+  scene.attachChild(SpritePlanets4);
+  SpritePlanets4.setScale(1);
+  
+  final Sprite SpritePlanets5 =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets5);
+  scene.attachChild(SpritePlanets5);
+  SpritePlanets5.setScale(1);
   //======================================= Load Va chạm =================================================
   Vacham = new AnimatedSprite((float) (-CAMERA_WIDTH), 100, this.mTiledTextureRegionVacham);
 	scene.attachChild(Vacham);
@@ -205,8 +241,8 @@ IOnSceneTouchListener {
 	//quydaobay.moveDirection(0);
 	//quydaobay.getX();
 	//quydaobay.getY();
-	targetLLMeteors = new LinkedList();
-	TargetsToBeAddedMeteors = new LinkedList();
+	//targetLLMeteors = new LinkedList();
+	//TargetsToBeAddedMeteors = new LinkedList();
 	IUpdateHandler detect = new IUpdateHandler() {
 	    @Override
 	    public void reset() {
@@ -214,24 +250,97 @@ IOnSceneTouchListener {
 	    }
 	    public void onUpdate(float pSecondsElapsed) { 
 	    	try {
+	    		//========== Move Metoers ==============//
 	    		if ((SpriteMeteors.getX()<-50))
 	    		{
 	    		Random rand = new Random();
-			  int minY = 5;
-			  int maxY = CAMERA_HEIGHT- mTextureRegionMeteors.getWidth();
-			  int rangeY = maxY - minY;
-			  ty = rand.nextInt(rangeY) + minY;
-			  double x = CAMERA_WIDTH;
-			  SpriteMeteors.setPosition(CAMERA_WIDTH, ty);
-			  quydaobay.setXY(ty,0);
-			  }
+	    		int minY = 5;
+	    		int maxY = CAMERA_HEIGHT- mTextureRegionMeteors.getWidth();
+	    		int rangeY = maxY - minY;
+	    		ty = rand.nextInt(rangeY) + minY;
+	    		double x = CAMERA_WIDTH;
+	    		SpriteMeteors.setPosition(CAMERA_WIDTH, ty);
+	    		quydaobay.setXY(ty,ty);
+	    		d =rand.nextInt(3);
+	    		}
+	    		if (d==0) SpriteMeteors.setPosition(SpriteMeteors.getX()-20,ty);
+	    		else 
+	    		{
 	    		
-	    		////Cập nhật tọa độ x---;
-	    		SpriteMeteors.setPosition(SpriteMeteors.getX()-20,quydaobay.getY());
-	    		
+	    		quydaobay.setXY(SpriteMeteors.getX(),0);	
+				quydaobay.moveDirection(d);
+				ty= quydaobay.getY();
+				SpriteMeteors.setPosition(SpriteMeteors.getX()-20,ty);
+	    		}
+	    		//================ Move Player ====================//
 	    		Player.setPosition(Player.getX(),Player.getY()+20);
 	    		Thread.sleep(50);
-	    			       
+	    		//================ Move Planets ===================//
+	    		if (check1==false)
+	    		{
+	    			Random rand = new Random();
+		    		int minY = mTexturePlanets.getHeight();
+		    		int maxY = CAMERA_HEIGHT;
+		    		int rangeY = maxY - minY;
+		    		int py1 = rand.nextInt(rangeY);	
+		    		SpritePlanets.setPosition(CAMERA_WIDTH, py1);
+		    		check1=true;
+	    		}
+	    		if (SpritePlanets.getX()>0-SpritePlanets.getWidth())
+	    			SpritePlanets.setPosition(SpritePlanets.getX()-10, SpritePlanets.getY());
+	    		//===================================================================//
+	    		if (SpritePlanets.getX()<0-SpritePlanets.getWidth()&&(check2==false))
+	    		{
+	    			Random rand = new Random();
+		    		int minY = mTexturePlanets2.getHeight();
+		    		int maxY = CAMERA_HEIGHT;
+		    		int rangeY = maxY - minY;
+		    		int py2 = rand.nextInt(rangeY);	
+		    		SpritePlanets2.setPosition(CAMERA_WIDTH, py2);
+		    		check2=true;
+	    		}
+	    		if ((SpritePlanets2.getX()>0-SpritePlanets2.getWidth()*2)&&(check2==true))
+	    			SpritePlanets2.setPosition(SpritePlanets2.getX()-10, SpritePlanets2.getY());
+	    		//====================================================================//
+	    		if (SpritePlanets2.getX()<0-SpritePlanets2.getX()&&(check3==false))
+	    		{
+	    			Random rand = new Random();
+		    		int minY = mTexturePlanets3.getHeight();
+		    		int maxY = CAMERA_HEIGHT;
+		    		int rangeY = maxY - minY;
+		    		int py3 = rand.nextInt(rangeY);	
+		    		SpritePlanets3.setPosition(CAMERA_WIDTH, py3);
+		    		check3=true;
+	    		}
+	    		if ((SpritePlanets3.getX()>0-SpritePlanets3.getWidth())&&(check3==true))
+	    			SpritePlanets3.setPosition(SpritePlanets3.getX()-10, SpritePlanets3.getY());
+	    		//====================================================================//
+	    		if (SpritePlanets3.getX()<0-SpritePlanets3.getX()&&(check4==false))
+	    		{
+	    			Random rand = new Random();
+		    		int minY = mTexturePlanets4.getHeight();
+		    		int maxY = CAMERA_HEIGHT;
+		    		int rangeY = maxY - minY;
+		    		int py4 = rand.nextInt(rangeY);	
+		    		SpritePlanets4.setPosition(CAMERA_WIDTH, py4);
+		    		check4=true;
+	    		}
+	    		if ((SpritePlanets4.getX()>0-SpritePlanets4.getWidth())&&(check4==true))
+	    			SpritePlanets4.setPosition(SpritePlanets4.getX()-10, SpritePlanets4.getY());
+	    		//====================================================================//
+	    		if (SpritePlanets4.getX()<0-SpritePlanets4.getX()&&(check5==false))
+	    		{
+	    			Random rand = new Random();
+		    		int minY = mTexturePlanets5.getHeight();
+		    		int maxY = CAMERA_HEIGHT;
+		    		int rangeY = maxY - minY;
+		    		int py5 = rand.nextInt(rangeY);	
+		    		SpritePlanets5.setPosition(CAMERA_WIDTH, py5);
+		    		check5=true;
+	    		}
+	    		if ((SpritePlanets5.getX()>0-SpritePlanets5.getWidth())&&(check5==true))
+	    			SpritePlanets5.setPosition(SpritePlanets5.getX()-10, SpritePlanets5.getY());
+	    		
 	          if (SpriteMeteors.collidesWith(Player)) {
 	        	  	Vacham.setVisible(true);
 			  		Vacham.setPosition(Player.getX(), Player.getY());
@@ -241,12 +350,8 @@ IOnSceneTouchListener {
 //			  		return ;
 			  		finish();// Kết thúc ứng dụng.
             }
-	        quydaobay.setXY(SpriteMeteors.getX(),0);	
-			quydaobay.moveDirection(0);
-	    	//}
-	       // SpriteMeteors.registerEntityModifier(mod);
-	        TargetsToBeAddedMeteors.add(SpriteMeteors);	
-	        targetLLMeteors.addAll(TargetsToBeAddedMeteors);
+	        
+	    	
 	      
 	   } 
 		   catch (InterruptedException e) {

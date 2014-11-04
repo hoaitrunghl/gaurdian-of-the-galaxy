@@ -25,13 +25,13 @@ public class QuyDaoBay {
 	{
 		switch (direction) {
 		case 0:  //Cách bay 1
-						y=x/2;
+						y=y;
 			break;
 		case 1:  
-					y=x*x;
+					y=x/2;
 			break;
 		case 2:  
-			
+					y=x;	
 			break;
 		default:
 			break;
