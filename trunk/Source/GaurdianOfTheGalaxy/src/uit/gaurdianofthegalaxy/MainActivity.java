@@ -86,12 +86,15 @@ IOnSceneTouchListener {
  private Sound Boom;
  QuyDaoBay quydaobay=new QuyDaoBay();
  float ty, py;
- int d;
+ int d,range;
+ int dem=0;
  Boolean check1=false;
  Boolean check2=false;
  Boolean check3=false;
  Boolean check4=false;
  Boolean check5=false;
+ boolean checkend=false;
+ Boolean checkvacham=false;
  @Override
  public Engine onLoadEngine() {
 	 //load thông số màn hình của thiết bị
@@ -203,28 +206,47 @@ IOnSceneTouchListener {
   final PhysicsHandler physicsHandler = new PhysicsHandler(Player);
   Player.registerUpdateHandler(physicsHandler);
   scene.attachChild(Player);
-  Player.setScale((float) 0.7);
+ // Player.setScale((float) 0.7);
   
   //========================================*Load sprite Planets*=========================================//
   final Sprite SpritePlanets =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets);
   scene.attachChild(SpritePlanets);
-  SpritePlanets.setScale(1);
+  //SpritePlanets.setScale((float) 0.75);
   
  final Sprite SpritePlanets2 =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets2);
   scene.attachChild(SpritePlanets2);
-  SpritePlanets2.setScale((float) 0.75);
+  //SpritePlanets2.setScale((float) 0.75);
   
   final Sprite SpritePlanets3 =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets3);
   scene.attachChild(SpritePlanets3);
-  SpritePlanets3.setScale(1);
+ // SpritePlanets3.setScale(1);
   
   final Sprite SpritePlanets4 =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets4);
   scene.attachChild(SpritePlanets4);
-  SpritePlanets4.setScale(1);
+ // SpritePlanets4.setScale(1);
   
   final Sprite SpritePlanets5 =  new Sprite(CAMERA_WIDTH, CAMERA_HEIGHT/2, mTextureRegionPlanets5);
   scene.attachChild(SpritePlanets5);
-  SpritePlanets5.setScale(1);
+ // SpritePlanets5.setScale(1);
+  //======================================= Load Enemy ===============================//
+  if (CAMERA_HEIGHT>800)
+  {
+	  Player.setScale((float) 0.7);
+	  SpritePlanets.setScale((float) 1);
+	  SpritePlanets2.setScale((float) 1);
+	  SpritePlanets3.setScale(1);	 
+	  SpritePlanets4.setScale(1);
+	  SpritePlanets5.setScale(1);
+  }
+  else if (CAMERA_HEIGHT<=800)
+  {
+	  Player.setScale((float) 0.5);
+	  SpritePlanets.setScale((float) 0.75);
+	  SpritePlanets2.setScale((float) 0.75);
+	  SpritePlanets3.setScale((float) 0.75);	 
+	  SpritePlanets4.setScale((float) 0.75);
+	  SpritePlanets5.setScale((float) 0.75);
+  }
   //======================================= Load Va chạm =================================================
   Vacham = new AnimatedSprite((float) (-CAMERA_WIDTH), 100, this.mTiledTextureRegionVacham);
 	scene.attachChild(Vacham);
@@ -237,12 +259,7 @@ IOnSceneTouchListener {
 	scene.attachChild(SpriteMeteors);
 	SpriteMeteors.setScale((float) (0.2));
 	
-	//quydaobay.setXY(SpriteMeteors.getX(), SpriteMeteors.getY());
-	//quydaobay.moveDirection(0);
-	//quydaobay.getX();
-	//quydaobay.getY();
-	//targetLLMeteors = new LinkedList();
-	//TargetsToBeAddedMeteors = new LinkedList();
+	
 	IUpdateHandler detect = new IUpdateHandler() {
 	    @Override
 	    public void reset() {
@@ -251,6 +268,18 @@ IOnSceneTouchListener {
 	    public void onUpdate(float pSecondsElapsed) { 
 	    	try {
 	    		//========== Move Metoers ==============//
+	    		if (checkvacham==true)
+	    		{
+	    			scene.attachChild(SpriteMeteors);
+	    			checkvacham=false;
+	    			Random rand = new Random();
+		    		int minY = 5;
+		    		int maxY = CAMERA_HEIGHT- mTextureRegionMeteors.getWidth();
+		    		int rangeY = maxY - minY;
+		    		ty = rand.nextInt(rangeY) + minY;
+	    			SpriteMeteors.setPosition(CAMERA_WIDTH, ty);
+	    			d =rand.nextInt(3);
+	    		}
 	    		if ((SpriteMeteors.getX()<-50))
 	    		{
 	    		Random rand = new Random();
@@ -275,60 +304,131 @@ IOnSceneTouchListener {
 	    		//================ Move Player ====================//
 	    		Player.setPosition(Player.getX(),Player.getY()+20);
 	    		Thread.sleep(50);
-	    		//================ Move Planets ===================//
+	    		int check=0;
+				//================ Move Planets ===================//
+	    		if (check==0)
+	    		{
 	    		if (check1==false)
 	    		{
 	    			Random rand = new Random();
 		    		int minY = mTexturePlanets.getHeight();
 		    		int maxY = CAMERA_HEIGHT;
 		    		int rangeY = maxY - minY;
+		    		range=rand.nextInt(CAMERA_WIDTH/2);
 		    		int py1 = rand.nextInt(rangeY);	
 		    		SpritePlanets.setPosition(CAMERA_WIDTH, py1);
 		    		check1=true;
 	    		}
 	    		if (SpritePlanets.getX()>0-SpritePlanets.getWidth())
+	    		{
 	    			SpritePlanets.setPosition(SpritePlanets.getX()-10, SpritePlanets.getY());
+	    			if (SpritePlanets.collidesWith(SpriteMeteors))
+	    			{
+	    				scene.detachChild(SpriteMeteors);
+	 			  		Boom.play();
+	 			  		checkvacham = true;
+	    			}
+	    			if (SpritePlanets.collidesWith(Player)) {
+	 	        	  	Vacham.setVisible(true);
+	 			  		Vacham.setPosition(Player.getX(), Player.getY());
+	 			  		scene.detachChild(Player);
+	 			  		Boom.play();
+	 			  		finish();
+	    		}}
+	    		
 	    		//===================================================================//
-	    		if (SpritePlanets.getX()<0-SpritePlanets.getWidth()&&(check2==false))
+	    		if (SpritePlanets.getX()<range&&(check2==false))
 	    		{
 	    			Random rand = new Random();
 		    		int minY = mTexturePlanets2.getHeight();
 		    		int maxY = CAMERA_HEIGHT;
 		    		int rangeY = maxY - minY;
+		    		range=rand.nextInt(CAMERA_WIDTH/2);
 		    		int py2 = rand.nextInt(rangeY);	
 		    		SpritePlanets2.setPosition(CAMERA_WIDTH, py2);
 		    		check2=true;
+		    		check++;
 	    		}
-	    		if ((SpritePlanets2.getX()>0-SpritePlanets2.getWidth()*2)&&(check2==true))
+	    		if ((SpritePlanets2.getX()>0-SpritePlanets2.getWidth())&&(check2==true))
+	    		{
 	    			SpritePlanets2.setPosition(SpritePlanets2.getX()-10, SpritePlanets2.getY());
+	    			if (SpritePlanets2.collidesWith(SpriteMeteors))
+	    			{    			
+	    				scene.detachChild(SpriteMeteors);
+	 			  		Boom.play();
+	 			  		checkvacham = true;
+	    			}
+	    			if (SpritePlanets2.collidesWith(Player)) {
+	 	        	  	Vacham.setVisible(true);
+	 			  		Vacham.setPosition(Player.getX(), Player.getY());
+	 			  		scene.detachChild(Player);
+	 			  		Boom.play();
+	 			  		finish();
+	             }
+	    		}
+	    		
 	    		//====================================================================//
-	    		if (SpritePlanets2.getX()<0-SpritePlanets2.getX()&&(check3==false))
+	    		if (SpritePlanets2.getX()<range&&(check3==false))
 	    		{
 	    			Random rand = new Random();
 		    		int minY = mTexturePlanets3.getHeight();
 		    		int maxY = CAMERA_HEIGHT;
 		    		int rangeY = maxY - minY;
+		    		range=rand.nextInt(CAMERA_WIDTH/2);
 		    		int py3 = rand.nextInt(rangeY);	
 		    		SpritePlanets3.setPosition(CAMERA_WIDTH, py3);
 		    		check3=true;
+		    		check++;
 	    		}
 	    		if ((SpritePlanets3.getX()>0-SpritePlanets3.getWidth())&&(check3==true))
+	    		{
 	    			SpritePlanets3.setPosition(SpritePlanets3.getX()-10, SpritePlanets3.getY());
+	    			if (SpritePlanets3.collidesWith(SpriteMeteors))
+	    			{
+	    				scene.detachChild(SpriteMeteors);
+	 			  		Boom.play();
+	 			  		checkvacham = true;
+	    			}
+	    			if (SpritePlanets3.collidesWith(Player)) {
+	 	        	  	Vacham.setVisible(true);
+	 			  		Vacham.setPosition(Player.getX(), Player.getY());
+	 			  		scene.detachChild(Player);
+	 			  		Boom.play();
+	 			  		finish();
+	    		}}
+	    		
 	    		//====================================================================//
-	    		if (SpritePlanets3.getX()<0-SpritePlanets3.getX()&&(check4==false))
+	    		if (SpritePlanets3.getX()<range&&(check4==false))
 	    		{
 	    			Random rand = new Random();
 		    		int minY = mTexturePlanets4.getHeight();
 		    		int maxY = CAMERA_HEIGHT;
 		    		int rangeY = maxY - minY;
+		    		range=rand.nextInt(CAMERA_WIDTH/2);
 		    		int py4 = rand.nextInt(rangeY);	
 		    		SpritePlanets4.setPosition(CAMERA_WIDTH, py4);
 		    		check4=true;
+		    		check++;
 	    		}
 	    		if ((SpritePlanets4.getX()>0-SpritePlanets4.getWidth())&&(check4==true))
+	    		{
 	    			SpritePlanets4.setPosition(SpritePlanets4.getX()-10, SpritePlanets4.getY());
+	    			if (SpritePlanets4.collidesWith(SpriteMeteors))
+	    			{
+	    				scene.detachChild(SpriteMeteors);
+	 			  		Boom.play();
+	 			  		checkvacham = true;
+	    			}
+	    			if (SpritePlanets4.collidesWith(Player)) {
+	 	        	  	Vacham.setVisible(true);
+	 			  		Vacham.setPosition(Player.getX(), Player.getY());
+	 			  		scene.detachChild(Player);
+	 			  		Boom.play();
+	 			  		finish();
+	    		}}
+	    		
 	    		//====================================================================//
-	    		if (SpritePlanets4.getX()<0-SpritePlanets4.getX()&&(check5==false))
+	    		if (SpritePlanets4.getX()<range&&(check5==false))
 	    		{
 	    			Random rand = new Random();
 		    		int minY = mTexturePlanets5.getHeight();
@@ -337,23 +437,53 @@ IOnSceneTouchListener {
 		    		int py5 = rand.nextInt(rangeY);	
 		    		SpritePlanets5.setPosition(CAMERA_WIDTH, py5);
 		    		check5=true;
+		    		checkend=true;
 	    		}
 	    		if ((SpritePlanets5.getX()>0-SpritePlanets5.getWidth())&&(check5==true))
+	    		{
 	    			SpritePlanets5.setPosition(SpritePlanets5.getX()-10, SpritePlanets5.getY());
+	    			if (SpritePlanets5.collidesWith(SpriteMeteors))
+	    			{
+	    				scene.detachChild(SpriteMeteors);
+	 			  		Boom.play();
+	 			  		checkvacham = true;
+	    			}
+	    			if (SpritePlanets5.collidesWith(Player)) {
+	 	        	  	Vacham.setVisible(true);
+	 			  		Vacham.setPosition(Player.getX(), Player.getY());
+	 			  		scene.detachChild(Player);
+	 			  		Boom.play();
+	 			  		finish();
+	    		}
+	    		}
 	    		
+	    		if (SpritePlanets5.getX()< -50)
+	    			{
+	    				check5=false;
+	    				SpritePlanets5.setPosition(CAMERA_WIDTH, CAMERA_HEIGHT);
+	    			}
+				if ((SpritePlanets5.getX()<range)&&(checkend==true))
+	    			{
+	    				check1=false;
+	    				check2=false;
+	    				check3=false;
+	    				check4=false;
+	    				checkend=false;
+	    				SpritePlanets.setPosition (CAMERA_WIDTH, CAMERA_HEIGHT);
+	    				SpritePlanets2.setPosition(CAMERA_WIDTH, CAMERA_HEIGHT);
+	    				SpritePlanets3.setPosition(CAMERA_WIDTH, CAMERA_HEIGHT);
+	    				SpritePlanets4.setPosition(CAMERA_WIDTH, CAMERA_HEIGHT);
+	    				
+	    			}
 	          if (SpriteMeteors.collidesWith(Player)) {
 	        	  	Vacham.setVisible(true);
 			  		Vacham.setPosition(Player.getX(), Player.getY());
 			  		//removeSprite(_target, targets);
 			  		scene.detachChild(Player);
 			  		Boom.play();
-//			  		return ;
 			  		finish();// Kết thúc ứng dụng.
-            }
-	        
-	    	
-	      
-	   } 
+            }     
+	   } }
 		   catch (InterruptedException e) {
 			//TODO Auto-generated catch block
 			e.printStackTrace();
@@ -402,5 +532,13 @@ private void touchProjectile(final float pX, final float pY) {
 	Player.setPosition(Player.getX(), Player.getY()-pY);
 	
 }
- 
+public boolean vaChamAnimated(AnimatedSprite a, Sprite b){     
+	AnimatedSprite A = null;
+	Sprite B = null;
+    A.setPosition(a.getX() + 20,a.getY());
+    B.setPosition(b.getX() +2,b.getY());
+    if(a.collidesWith(b))
+            return true;
+    return false;
+}
 }
