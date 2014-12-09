@@ -29,8 +29,11 @@ import org.anddev.andengine.entity.scene.background.AutoParallaxBackground;
 import org.anddev.andengine.entity.scene.background.ParallaxBackground.ParallaxEntity;
 import org.anddev.andengine.entity.sprite.AnimatedSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
+import org.anddev.andengine.entity.text.ChangeableText;
+import org.anddev.andengine.entity.text.Text;
 import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.input.touch.TouchEvent;
+import org.anddev.andengine.opengl.font.Font;
 import org.anddev.andengine.opengl.texture.Texture;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
@@ -38,6 +41,10 @@ import org.anddev.andengine.opengl.texture.region.TextureRegionFactory;
 import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
 import org.anddev.andengine.ui.activity.BaseGameActivity;
 
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.opengl.GLES20;
 import android.os.Debug;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -80,7 +87,10 @@ IOnSceneTouchListener {
  private Texture mTextureVacham;
  private TiledTextureRegion mTiledTextureRegionVacham;
  private AnimatedSprite Vacham;
-
+// Khai báo biến font
+ private Texture mFontTexture;
+ private Font mFont;
+ private Text TextScore;
  //Khao báo biến music
  private Music backgroundMusic;
  private Sound Boom;
@@ -88,13 +98,20 @@ IOnSceneTouchListener {
  float ty, py;
  int d,range;
  int dem=0;
- Boolean check1=false;
- Boolean check2=false;
- Boolean check3=false;
- Boolean check4=false;
- Boolean check5=false;
+ int ScoreNumber=0;
+ int HighScore=0;
+ boolean check1=false;
+ boolean check2=false;
+ boolean check3=false;
+ boolean check4=false;
+ boolean check5=false;
  boolean checkend=false;
- Boolean checkvacham=false;
+ boolean checkpoint1=true;
+ boolean checkpoint2=true;
+ boolean checkpoint3=true;
+ boolean checkpoint4=true;
+ boolean checkpoint5=true;
+ boolean checkvacham=false;
  @Override
  public Engine onLoadEngine() {
 	 //load thông số màn hình của thiết bị
@@ -159,7 +176,12 @@ IOnSceneTouchListener {
 	this.mTiledTextureRegionVacham = TextureRegionFactory.createTiledFromAsset(this.mTextureVacham, this, "burst.png", 0, 0,7,7);
 	mEngine.getTextureManager().loadTexture(mTextureVacham);
 
-        
+     // Text
+	this.mFontTexture = new Texture(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+	  
+	  this.mFont = new Font(this.mFontTexture, Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 32, true, Color.WHITE);
+	  this.mEngine.getTextureManager().loadTexture(this.mFontTexture);
+	  this.mEngine.getFontManager().loadFont(this.mFont);
     /////Music
     MusicFactory.setAssetBasePath("mfx/");
     try {
@@ -254,6 +276,15 @@ IOnSceneTouchListener {
 	Vacham.setRotation(0);
 	Vacham.animate(new long[] { 200, 200, 200,200},0, 3, true);
 	Vacham.setVisible(false);
+	//===================================================
+	Text mText=new Text(100, 10, mFont, "Score:");
+	scene.attachChild(mText);
+	Text HighText=new Text(300,10, mFont, "HighScore: ");
+	scene.attachChild(HighText);
+	final ChangeableText TextCurrentScore =new ChangeableText(200, 10, mFont, "",10);
+	scene.attachChild(TextCurrentScore);
+	final ChangeableText TextHighScore=new ChangeableText(550, 10, mFont, "",10);
+	scene.attachChild(TextHighScore);
   //=================================== * Meteors and move * ===========================================================//
 	SpriteMeteors =  new Sprite((float) (-CAMERA_WIDTH), CAMERA_HEIGHT/2, mTextureRegionMeteors);
 	scene.attachChild(SpriteMeteors);
@@ -280,6 +311,7 @@ IOnSceneTouchListener {
 	    			SpriteMeteors.setPosition(CAMERA_WIDTH, ty);
 	    			d =rand.nextInt(3);
 	    		}
+	    		
 	    		if ((SpriteMeteors.getX()<-50))
 	    		{
 	    		Random rand = new Random();
@@ -302,9 +334,13 @@ IOnSceneTouchListener {
 				SpriteMeteors.setPosition(SpriteMeteors.getX()-20,ty);
 	    		}
 	    		//================ Move Player ====================//
-	    		Player.setPosition(Player.getX(),Player.getY()+20);
+	    		Player.setPosition(Player.getX(),Player.getY()+10);
 	    		Thread.sleep(50);
 	    		int check=0;
+	    		//========================
+	    		TextCurrentScore.setText(String.valueOf(ScoreNumber));
+	    		SavingScore(ScoreNumber);
+	    		TextHighScore.setText(String.valueOf(HighScore));
 				//================ Move Planets ===================//
 	    		if (check==0)
 	    		{
@@ -328,13 +364,19 @@ IOnSceneTouchListener {
 	 			  		Boom.play();
 	 			  		checkvacham = true;
 	    			}
-	    			if (SpritePlanets.collidesWith(Player)) {
+	    			if (vaChamAnimated(Player,SpritePlanets)) {
 	 	        	  	Vacham.setVisible(true);
 	 			  		Vacham.setPosition(Player.getX(), Player.getY());
 	 			  		scene.detachChild(Player);
 	 			  		Boom.play();
 	 			  		finish();
-	    		}}
+	    		}
+	    			if ((SpritePlanets.getX()<Player.getX())&& (checkpoint1==true)) 
+	    				{
+	    				ScoreNumber++;
+	    				checkpoint1=false;
+	    				}
+	    			}
 	    		
 	    		//===================================================================//
 	    		if (SpritePlanets.getX()<range&&(check2==false))
@@ -365,6 +407,11 @@ IOnSceneTouchListener {
 	 			  		Boom.play();
 	 			  		finish();
 	             }
+	    			if ((SpritePlanets2.getX()<Player.getX())&& (checkpoint2==true)) 
+    				{
+    				ScoreNumber++;
+    				checkpoint2=false;
+    				}
 	    		}
 	    		
 	    		//====================================================================//
@@ -395,7 +442,13 @@ IOnSceneTouchListener {
 	 			  		scene.detachChild(Player);
 	 			  		Boom.play();
 	 			  		finish();
-	    		}}
+	    		}
+	    			if ((SpritePlanets3.getX()<Player.getX())&& (checkpoint3==true)) 
+    				{
+    				ScoreNumber++;
+    				checkpoint3=false;
+    				}
+	    			}
 	    		
 	    		//====================================================================//
 	    		if (SpritePlanets3.getX()<range&&(check4==false))
@@ -425,7 +478,13 @@ IOnSceneTouchListener {
 	 			  		scene.detachChild(Player);
 	 			  		Boom.play();
 	 			  		finish();
-	    		}}
+	    		}
+	    			if ((SpritePlanets4.getX()<Player.getX())&& (checkpoint4==true)) 
+    				{
+    				ScoreNumber++;
+    				checkpoint4=false;
+    				}
+	    			}
 	    		
 	    		//====================================================================//
 	    		if (SpritePlanets4.getX()<range&&(check5==false))
@@ -448,19 +507,26 @@ IOnSceneTouchListener {
 	 			  		Boom.play();
 	 			  		checkvacham = true;
 	    			}
-	    			if (SpritePlanets5.collidesWith(Player)) {
+	    			//if (SpritePlanets5.collidesWith(Player)) {
+	    			if (vaChamAnimated(Player, SpritePlanets5)){
 	 	        	  	Vacham.setVisible(true);
 	 			  		Vacham.setPosition(Player.getX(), Player.getY());
 	 			  		scene.detachChild(Player);
 	 			  		Boom.play();
 	 			  		finish();
 	    		}
+	    			if ((SpritePlanets5.getX()<Player.getX())&& (checkpoint5==true)) 
+    				{
+    				ScoreNumber++;
+    				checkpoint5=false;
+    				}
 	    		}
 	    		
 	    		if (SpritePlanets5.getX()< -50)
 	    			{
 	    				check5=false;
 	    				SpritePlanets5.setPosition(CAMERA_WIDTH, CAMERA_HEIGHT);
+	    				checkpoint5=true;
 	    			}
 				if ((SpritePlanets5.getX()<range)&&(checkend==true))
 	    			{
@@ -473,9 +539,14 @@ IOnSceneTouchListener {
 	    				SpritePlanets2.setPosition(CAMERA_WIDTH, CAMERA_HEIGHT);
 	    				SpritePlanets3.setPosition(CAMERA_WIDTH, CAMERA_HEIGHT);
 	    				SpritePlanets4.setPosition(CAMERA_WIDTH, CAMERA_HEIGHT);
+	    				checkpoint1=true;
+	    				checkpoint2=true;
+	    				checkpoint3=true;
+	    				checkpoint4=true;
+	    				
 	    				
 	    			}
-	          if (SpriteMeteors.collidesWith(Player)) {
+	           if (SpriteMeteors.collidesWith(Player)) {
 	        	  	Vacham.setVisible(true);
 			  		Vacham.setPosition(Player.getX(), Player.getY());
 			  		//removeSprite(_target, targets);
@@ -519,7 +590,7 @@ public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
 	// TODO Auto-generated method stub
 	if (pSceneTouchEvent.getAction() == TouchEvent.ACTION_DOWN) {
 		final float touchX = Player.getX();
-		final float touchY = 150;
+		final float touchY = 100;
 		
         touchProjectile(touchX,touchY);
         return true;
@@ -533,12 +604,34 @@ private void touchProjectile(final float pX, final float pY) {
 	
 }
 public boolean vaChamAnimated(AnimatedSprite a, Sprite b){     
-	AnimatedSprite A = null;
-	Sprite B = null;
-    A.setPosition(a.getX() + 20,a.getY());
-    B.setPosition(b.getX() +2,b.getY());
-    if(a.collidesWith(b))
+	AnimatedSprite A = new AnimatedSprite(0, 0, a.getTextureRegion());
+	Sprite B = new Sprite(0, 0, b.getTextureRegion());
+    A.setPosition(a.getX(),a.getY());
+    B.setPosition(b.getX()+100,b.getY()+200);
+    if(A.collidesWith(B))
             return true;
     return false;
+}
+public boolean vaChamSprite(Sprite a, Sprite b){     
+	Sprite A = new Sprite(0, 0, a.getTextureRegion());
+	Sprite B = new Sprite(0, 0, b.getTextureRegion());
+    A.setPosition(a.getX(),a.getY());
+    B.setPosition(b.getX(),b.getY());
+    if(A.collidesWith(B))
+            return true;
+    return false;
+}
+public void SavingScore(int CurrentScore)
+{
+	SharedPreferences pre=getSharedPreferences
+			 ("HighScore", MODE_PRIVATE);
+	SharedPreferences.Editor edit=pre.edit();
+	HighScore=pre.getInt("HighScore",0);
+	if (CurrentScore>HighScore)
+	{
+		//edit.clear();
+		edit.putInt("HighScore", CurrentScore);
+		edit.commit();		
+	}
 }
 }
